@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang='en'>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<style>
+
+ 
+input[id=nn] {
+    border: 2px solid black;
+};
+
+
+</style>
+
+<script src="SeperateCircle.js"></script>
+<script src="StackedCircle.js"></script>
+<script src="Bar.js"></script>
+
+<body>
+  <h1> Cognitive Experiment </h1>
+  <p id="expcount"></p>
+  <section id="container"></section>
+	<p >
+	Two values are marked with dots.
+	What do you think the percent of the smaller value to the larger value?
+	Please put your answer below.
+	e.g.If you think the smaller one is exactly a half of the bigger one. 
+	please input "50".
+
+	</p>
+	
+	<div>
+
+	<input style="margin-left:600px; margin-top:5px" type="text" id="nn" min="1" max="100"/>
+	<input style="margin-left:10px; margin-top:5px" type="button" id='nextQ' value="Next" onclick="next();"/>	
+	</div>
+	
+	
+	
+  	<script>
+
+var trialcount=1;
+
+d3.select("#expcount")
+  			.append("text")
+  			.attr("font-size","20px")
+  			.text(" "+trialcount+"/60");
+  			
+var true_pt=SepCircleChart();
+
+var trialDataForCSV = [["TrialNumber", "ChartType", "TruePercentage", "TrialPercentage", "Error"]];
+
+
+
+function next()
+  {
+  	if(document.getElementById("nn").value>0 && document.getElementById("nn").value<=100)
+  	{	
+ 				
+		var trial_pt = document.getElementById("nn").value;
+		var error = caculateError(true_pt, trial_pt);
+		var chart_type = document.getElementById("0").getAttribute("class");
+		trialDataForCSV.push([trialcount, chart_type, true_pt, trial_pt, error]);						 
+		console.log(trialDataForCSV)
+		
+		d3.select("svg").remove();
+		d3.select("#expcount").selectAll("*").remove();
+		
+		trialcount += 1;
+		
+		d3.select("#expcount")
+  			.append("text")
+  			.attr("font-family", "sans-serif")
+  			.attr("font-size","20px")
+  			.text(" "+trialcount+"/60");
+	
+		if (trialcount<21) 
+		{
+			true_pt = SepCircleChart();
+		}
+		else if (trialcount<41) 
+		{
+			true_pt = BarChart();
+		}
+		else if(trialcount<61) 
+		{	
+			true_pt = StackedCircleChart();	
+		}
+		else
+		{
+			to_csv(trialDataForCSV);
+		
+		// Add an SVG
+  		d3.select("body")
+		  .append("svg")
+			.attr("width",400)
+			.attr("height",200)
+			.style("stroke", "black")
+			.style("background-color","rgb(250, 250, 250)")
+			.style("display","block")
+			.style("margin","auto");	
+   		
+   		// Add text
+   		d3.select("svg")
+  			.append("text")
+  			.attr("x", 20)
+  			.attr("y", 60)
+  			.attr("font-family", "sans-serif")
+  			.attr("font-size","40px")
+  			.text("我酒么么哒！")
+   			.style("fill", "rgb(240,128,128)");
+   		
+   		d3.select("svg")
+  			.append("text")
+  			.attr("x", 20)
+  			.attr("y", 100)
+  			.attr("font-family", "sans-serif")
+  			.attr("font-size","40px")
+  			.text("LOVING YOU!!")
+   			.style("fill", "rgb(240,128,128)");
+   		
+   		
+		}							 				
+		var xx = document.getElementById("nn");
+		xx.value = "";
+									
+	}
+  	else
+  	{
+  		alert("Please input a percentage number within 1 and 100");
+  	};			
+  	};
+  
+//calculate log2 error
+function caculateError(truePercent, trialPercent)
+	{
+		var difference = Math.abs(truePercent - trialPercent);
+		var err = Math.log2(difference + 1.0/8.0);
+		err = (err == -3) ? 0 :err.toFixed(2);
+		return err;	
+	}
+	
+//Init and download CSV file
+function to_csv(data){
+	var csvContent = "data:text/csv;charset=utf-8,";
+	data.forEach(function(infoArray, index){
+			dataString = infoArray.join(",");
+			csvContent += index < data.length ? dataString+ "\n" : dataString;
+			}); 
+	var encodedUri = encodeURI(csvContent);
+	var link = document.createElement("a");
+	link.setAttribute("href", encodedUri);
+	link.setAttribute("download", "data.csv");
+	document.body.appendChild(link);
+
+	link.click(); // This will download the data file named "uuid_data.csv".
+		
+	}
+  
+	</script>	
+</body>
+
+
